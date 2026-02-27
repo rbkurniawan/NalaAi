@@ -60,7 +60,11 @@ func (pm *PromptManager) GetPrompt(name string) string {
     if prompt, exists := pm.prompts[name]; exists {
         return prompt
     }
-    return pm.prompts["Instruction"] // default ke Instruction
+    // Default ke Instruction jika tidak ditemukan
+    if instruction, exists := pm.prompts["Instruction"]; exists {
+        return instruction
+    }
+    return ""
 }
 
 func (pm *PromptManager) GetInstruction() string {

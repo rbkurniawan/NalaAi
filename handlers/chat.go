@@ -8,18 +8,17 @@ import (
     "net/http"
 
     "github.com/rbkurniawan/NalaAi/config"
-    "github.com/rbkurniawan/NalaAi/prompts"
     "github.com/rbkurniawan/NalaAi/utils"
 )
 
 type ChatHandler struct {
     config    *config.Config
-    prompts   *prompts.PromptManager
     logger    *utils.Logger
 }
 
 type ChatRequest struct {
-    Messages []Message `json:"messages"`
+    Instruction string    `json:"instruction"` // instruction dari user
+    Messages    []Message `json:"messages"`
 }
 
 type Message struct {
@@ -27,16 +26,9 @@ type Message struct {
     Content string `json:"content"`
 }
 
-type ChatResponse struct {
-    Choices []struct {
-        Message Message `json:"message"`
-    } `json:"choices"`
-}
-
-func NewChatHandler(cfg *config.Config, pm *prompts.PromptManager, logger *utils.Logger) *ChatHandler {
+func NewChatHandler(cfg *config.Config, logger *utils.Logger) *ChatHandler {
     return &ChatHandler{
         config:  cfg,
-        prompts: pm,
         logger:  logger,
     }
 }
@@ -64,10 +56,15 @@ func (h *ChatHandler) HandleChat(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Gunakan instruction dari user, jika kosong beri default
+    instruction := chatReq.Instruction
+    if instruction == "" {
+        instruction = "You are a helpful AI assistant."
+    }
+
     // Add instruction prompt to messages
-    instruction := h.prompts.GetInstruction()
     messages := []Message{
-        {Role: "developer", Content: instruction},
+        {Role: "system", Content: instruction},
     }
     messages = append(messages, chatReq.Messages...)
 
